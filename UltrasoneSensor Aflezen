@@ -1,0 +1,37 @@
+#include "mbed.h"
+DigitalOut Trigger(D13);
+DigitalIn Echo(D9);
+Timer sonar;
+Timer timer;
+
+float meting;
+float correctie;
+float hoogste;
+
+int main()
+{
+    sonar.reset();
+    sonar.start();
+    while (Echo==2) {};
+    sonar.stop();
+    correctie = sonar.read_us();
+    timer.start();
+ 
+    while(1) 
+    {
+        Trigger = 1;
+        sonar.reset();
+        wait_us(10.0);
+        Trigger = 0;
+
+        while (Echo==0) {};
+        sonar.start();
+        while (Echo==1) {};
+        sonar.stop();
+        meting = (sonar.read_us()-correctie)/58.0f;
+        timer.read();
+        
+        printf(" %.2f cm \n",meting);
+        timer.reset();   
+    }
+}

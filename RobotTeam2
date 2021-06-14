@@ -1,0 +1,112 @@
+#include "mbed.h"
+PwmOut Motor1(D10); // Rechts
+PwmOut Motor2(D11); // Links
+DigitalOut Motor1Achteruit(D6);
+DigitalOut Motor1Vooruit(D3);
+DigitalOut Motor2Achteruit(D4);
+DigitalOut Motor2Vooruit(D5);
+InterruptIn KnopStop(D7, PullDown);
+DigitalIn IrSensorR (A2);
+DigitalIn IrSensorL (A1);
+
+enum Rijden {Rechtdoor, Rechts, Links, Stoppen};
+
+int Rijden = Stoppen;
+int ReflectiveSensorR;
+int ReflectiveSensorL;
+float Meting;
+float Correctie;
+
+void Start() // Start/Stop knop
+{
+    wait_ms(10);
+    if(Rijden == Stoppen)
+    {
+        Rijden = Rechtdoor;    
+    }
+    else
+    {
+        Rijden = Stoppen;    
+    }
+}
+
+
+int main()
+{
+    Motor1.period(0.01f);
+    Motor2.period(0.01f);
+    KnopStop.rise(&Start);
+
+    while(1)
+    {   
+        ReflectiveSensorR = IrSensorR.read();
+        ReflectiveSensorL = IrSensorL.read();
+        
+        switch(Rijden)
+        {
+            case Rechtdoor:
+                Motor1Achteruit = 1;
+                Motor1Vooruit = 0;
+                Motor2Achteruit = 1;
+                Motor2Vooruit = 0;
+                Motor1.write(0.3f);
+                Motor2.write(0.3f);
+                
+                if(ReflectiveSensorR == 1)
+                {
+                    Rijden = Rechts;
+                }
+                
+                if(ReflectiveSensorL == 1)
+                {
+                    Rijden = Links;
+                }
+                
+            break;
+            
+            case Rechts:
+                Motor1Achteruit = 1;
+                Motor1Vooruit = 0;
+                Motor2Achteruit = 0;
+                Motor2Vooruit = 0;
+                Motor1.write(0.3f);
+                Motor2.write(0.1f);
+                
+                if(ReflectiveSensorL == 0)
+                {
+                    Rijden = Rechtdoor;
+                }
+
+                
+            break;
+            
+            case Links:
+                Motor1Achteruit = 0;
+                Motor1Vooruit = 0;
+                Motor2Achteruit = 1;
+                Motor2Vooruit = 0;
+                Motor1.write(0.1f);
+                Motor2.write(0.3f);
+                
+                if(ReflectiveSensorR == 0)
+                {
+                    Rijden = Rechtdoor;
+                }
+            break;
+            
+            case Stoppen:
+                Motor1Achteruit = 0;
+                Motor1Vooruit = 0;
+                Motor2Achteruit = 0;
+                Motor2Vooruit = 0;
+            break;
+            
+            default:
+                Motor1Achteruit = 0;
+                Motor1Vooruit = 0;
+                Motor2Achteruit = 0;
+                Motor2Vooruit = 0;
+            break;
+        } 
+    }
+}
